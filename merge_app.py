@@ -12,6 +12,7 @@ from PyQt5.QtWidgets import (
 from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import QStyleFactory
 
+
 class MergeApp(QWidget):
     def __init__(self):
         super().__init__()
@@ -97,9 +98,8 @@ class MergeApp(QWidget):
             self.dataentry_file = file
             self.data_display.setText(file)
 
-
     # -----------------------------
-    # Extract value from report flexible
+    # Extract LAST value after the matched name
     # -----------------------------
     def extract_value(self, df, colname):
         colname = str(colname).strip().lower()
@@ -107,13 +107,24 @@ class MergeApp(QWidget):
         for i in range(df.shape[0]):
             for j in range(df.shape[1]):
                 cell = str(df.iat[i, j]).strip().lower()
-                if cell == colname:
-                    if j + 1 < df.shape[1]:
-                        val = df.iat[i, j + 1]
-                        return val if pd.notna(val) else "-"
-                    return "-"
-        return "-"  # Not found
 
+                # Column name matched
+                if cell == colname:
+
+                    # Collect ALL values in right-side columns
+                    values = []
+                    for k in range(j + 1, df.shape[1]):
+                        val = df.iat[i, k]
+                        if pd.notna(val) and str(val).strip() != "":
+                            values.append(val)
+
+                    # If multiple values found → return LAST value
+                    if values:
+                        return values[-1]
+
+                    return "-"
+
+        return "-"  # Not found at all
 
     # -----------------------------
     # Merge Logic (FINAL)
