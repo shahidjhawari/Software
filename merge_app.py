@@ -18,7 +18,7 @@ class MergeApp(QWidget):
         super().__init__()
 
         # Permanent Software Icon
-        self.app_icon_path = "/mnt/data/30a1bb27-cbe8-4041-9ee1-1efe58fdf9a7.png"
+        self.app_icon_path = "usgroup.ico"
         self.setWindowIcon(QIcon(self.app_icon_path))
 
         self.report_files = []
