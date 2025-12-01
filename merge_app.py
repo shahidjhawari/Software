@@ -1,13 +1,13 @@
-# QA LAB Merge Application — Flexible Report Reader (Final Updated Logic)
+# QA LAB Merge Application — Professional UI
 # Developer: Shahid Iqbal — © All Rights Reserved
 
 import sys
 import os
 import pandas as pd
-from PyQt5.QtGui import QIcon
+from PyQt5.QtGui import QIcon, QFont
 from PyQt5.QtWidgets import (
     QApplication, QWidget, QPushButton, QLabel, QFileDialog,
-    QListWidget, QVBoxLayout, QHBoxLayout, QMessageBox
+    QListWidget, QVBoxLayout, QHBoxLayout, QMessageBox, QFrame
 )
 from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import QStyleFactory
@@ -17,60 +17,141 @@ class MergeApp(QWidget):
     def __init__(self):
         super().__init__()
 
-        # Permanent Software Icon
-        self.app_icon_path = "usgroup.ico"
-        self.setWindowIcon(QIcon(self.app_icon_path))
+        # ---------------------
+        # APP ICON
+        # ---------------------
+        base_dir = os.path.dirname(os.path.abspath(__file__))
+        icon_path = os.path.join(base_dir, "usgroup.ico")
+        self.setWindowIcon(QIcon(icon_path))
 
         self.report_files = []
         self.dataentry_file = None
 
-        self.setWindowTitle("QA LAB Data Merge Software — Developed by Shahid Iqbal")
-        self.setGeometry(200, 200, 1050, 650)
-
+        # ---------------------
+        # WINDOW SETTINGS
+        # ---------------------
+        self.setWindowTitle("QA LAB — Auto Data Enter")
+        self.setGeometry(200, 200, 1100, 680)
         QApplication.setStyle(QStyleFactory.create("Fusion"))
 
+        self.setStyleSheet("""
+            QWidget {
+                background-color: #1e1e1e;
+                color: #e8e8e8;
+                font-family: Segoe UI;
+                font-size: 11pt;
+            }
+            QLabel {
+                font-size: 13pt;
+                font-weight: bold;
+                padding: 4px;
+            }
+            QListWidget {
+                background: #2b2b2b;
+                border: 1px solid #444;
+                padding: 8px;
+                border-radius: 6px;
+            }
+            QPushButton {
+                background-color: #0066cc;
+                color: white;
+                padding: 10px 15px;
+                border: none;
+                border-radius: 6px;
+                font-size: 11.5pt;
+            }
+            QPushButton:hover {
+                background-color: #1a75ff;
+            }
+            QPushButton:pressed {
+                background-color: #004c99;
+            }
+            QFrame {
+                background-color: #2a2a2a;
+                border: 1px solid #444;
+                border-radius: 10px;
+                padding: 12px;
+            }
+        """)
+
+        # Layouts
         main_layout = QHBoxLayout()
+        left_box = QFrame()
+        right_box = QFrame()
+
         left_layout = QVBoxLayout()
         right_layout = QVBoxLayout()
 
-        # Left side
-        self.report_label = QLabel("Upload Report Files:")
+        # ---------------------
+        # LEFT PANEL
+        # ---------------------
+        report_title = QLabel("Report Files")
         self.report_list = QListWidget()
-        self.btn_add_reports = QPushButton("Add Reports")
+
+        self.btn_add_reports = QPushButton("Add Report Files")
         self.btn_add_reports.clicked.connect(self.load_reports)
-        self.btn_clear_reports = QPushButton("Clear Reports")
+
+        self.btn_clear_reports = QPushButton("Clear List")
         self.btn_clear_reports.clicked.connect(self.clear_reports)
 
-        left_layout.addWidget(self.report_label)
+        left_layout.addWidget(report_title)
         left_layout.addWidget(self.report_list)
         left_layout.addWidget(self.btn_add_reports)
         left_layout.addWidget(self.btn_clear_reports)
 
-        # Right side
-        self.data_label = QLabel("Select Base DataEntry File:")
+        left_box.setLayout(left_layout)
+
+        # ---------------------
+        # RIGHT PANEL
+        # ---------------------
+        data_title = QLabel("Development Data Entry File")
         self.data_display = QLabel("No File Selected")
-        self.btn_dataentry = QPushButton("Select DataEntry File")
+        self.btn_dataentry = QPushButton("Select Data Entry File")
         self.btn_dataentry.clicked.connect(self.load_dataentry)
 
-        right_layout.addWidget(self.data_label)
+        right_layout.addWidget(data_title)
         right_layout.addWidget(self.data_display)
         right_layout.addWidget(self.btn_dataentry)
 
-        # Merge button
+        right_box.setLayout(right_layout)
+
+        # ---------------------
+        # MERGE BUTTON
+        # ---------------------
         self.btn_merge = QPushButton("Merge & Save Output")
-        self.btn_merge.setFixedHeight(45)
+        self.btn_merge.setFixedHeight(50)
+        self.btn_merge.setStyleSheet("""
+            QPushButton {
+                font-size: 13pt;
+                background-color: #008000;
+                border-radius: 6px;
+            }
+            QPushButton:hover {
+                background-color: #00a300;
+            }
+            QPushButton:pressed {
+                background-color: #006600;
+            }
+        """)
         self.btn_merge.clicked.connect(self.merge_files)
 
-        main_layout.addLayout(left_layout, 2)
-        main_layout.addLayout(right_layout, 1)
+        # ---------------------
+        # FOOTER
+        # ---------------------
+        footer = QLabel("Developed by Shahid Iqbal — © All Rights Reserved")
+        footer.setAlignment(Qt.AlignCenter)
+        footer.setStyleSheet("font-size: 10pt; padding: 10px; color: #bbbbbb;")
+
+        # ---------------------
+        # ORGANIZE LAYOUT
+        # ---------------------
+        main_layout.addWidget(left_box, 2)
+        main_layout.addWidget(right_box, 1)
 
         wrapper = QVBoxLayout()
         wrapper.addLayout(main_layout)
         wrapper.addWidget(self.btn_merge)
-
-        dev_label = QLabel("Developed by Shahid Iqbal — © All Rights Reserved")
-        dev_label.setAlignment(Qt.AlignCenter)
-        wrapper.addWidget(dev_label)
+        wrapper.addWidget(footer)
 
         self.setLayout(wrapper)
 
@@ -99,7 +180,7 @@ class MergeApp(QWidget):
             self.data_display.setText(file)
 
     # -----------------------------
-    # Extract LAST value after the matched name
+    # Extract LAST value after matched name
     # -----------------------------
     def extract_value(self, df, colname):
         colname = str(colname).strip().lower()
@@ -108,31 +189,25 @@ class MergeApp(QWidget):
             for j in range(df.shape[1]):
                 cell = str(df.iat[i, j]).strip().lower()
 
-                # Column name matched
                 if cell == colname:
-
-                    # Collect ALL values in right-side columns
                     values = []
                     for k in range(j + 1, df.shape[1]):
-                        val = df.iat[i, k]
-                        if pd.notna(val) and str(val).strip() != "":
-                            values.append(val)
+                        v = df.iat[k, j] if pd.notna(df.iat[k, j]) else None
+                        if pd.notna(df.iat[i, k]) and str(df.iat[i, k]).strip() != "":
+                            values.append(df.iat[i, k])
 
-                    # If multiple values found → return LAST value
-                    if values:
-                        return values[-1]
+                    return values[-1] if values else "-"
 
-                    return "-"
-
-        return "-"  # Not found at all
+        return "-"
 
     # -----------------------------
-    # Merge Logic (FINAL)
+    # Merge Logic
     # -----------------------------
     def merge_files(self):
         if not self.dataentry_file:
             QMessageBox.warning(self, "Error", "Please select DataEntry file first.")
             return
+        
         if not self.report_files:
             QMessageBox.warning(self, "Error", "Please upload at least one Report file.")
             return
@@ -143,13 +218,11 @@ class MergeApp(QWidget):
         appended_rows = []
 
         for fpath in self.report_files:
-
-            df_r = pd.read_excel(fpath, header=None)  # Flexible format
+            df_r = pd.read_excel(fpath, header=None)
 
             row = {}
             for col in base_columns:
-                val = self.extract_value(df_r, col)
-                row[col] = val
+                row[col] = self.extract_value(df_r, col)
 
             appended_rows.append(row)
 
