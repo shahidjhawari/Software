@@ -9,7 +9,7 @@ from PyQt5.QtWidgets import (
 from PyQt5.QtWidgets import QStyleFactory
 
 
-# ---------------- HELPER ----------------
+# ---------------- HELPERS ----------------
 def is_number(x):
     try:
         float(x)
@@ -82,42 +82,61 @@ class MergeApp(QWidget):
         result = {}
         current_test = ""
 
+        rubbing_found = {"Dry": False, "Wet": False}
+
         for i in range(len(df)):
             row = df.iloc[i]
             text = " ".join(row).lower()
 
-            # Detect test block
+            # -------- Test block detection --------
             if "tear strength" in text:
                 current_test = "Tear"
+
             elif "tensile strength" in text:
                 current_test = "Tensile"
+
             elif "color fastness to rubbing" in text:
                 current_test = "Rubbing"
-            elif "shade change" in text:
-                current_test = "Shade Change"
-            elif "staining" in text:
-                current_test = "Staining"
-            elif "ph value" in text:
-                current_test = "pH"
-            elif text.strip() == "temp":
-                current_test = "Temp"
+                rubbing_found = {"Dry": False, "Wet": False}
 
-            # Warp / Weft rows
-            if "warp" in text:
-                val = last_numeric(row)
-                if current_test:
-                    result[f"{current_test} Warp"] = val
+            elif "color fastness to home laundering" in text:
+                current_test = "Home Laundering"
 
-            if "weft" in text:
-                val = last_numeric(row)
-                if current_test:
-                    result[f"{current_test} Weft"] = val
+            # -------- Tear / Tensile (UNCHANGED) --------
+            if "warp" in text and current_test in ["Tear", "Tensile"]:
+                result[f"{current_test} Warp"] = last_numeric(row)
 
-            # Single value tests
-            if current_test in ["Shade Change", "Staining", "pH", "Temp"]:
-                val = last_numeric(row)
-                if val:
-                    result[current_test] = val
+            if "weft" in text and current_test in ["Tear", "Tensile"]:
+                result[f"{current_test} Weft"] = last_numeric(row)
+
+            # -------- Rubbing --------
+            if current_test == "Rubbing":
+                if "dry" in text:
+                    result["Rubbing Dry"] = last_numeric(row)
+                    rubbing_found["Dry"] = True
+
+                if "wet" in text:
+                    result["Rubbing Wet"] = last_numeric(row)
+                    rubbing_found["Wet"] = True
+
+            # -------- Home Laundering --------
+            if current_test == "Home Laundering":
+                if "shade change" in text:
+                    result["Shade Change"] = last_numeric(row)
+
+                if "staining" in text:
+                    result["Staining"] = last_numeric(row)
+
+            # -------- Single value tests --------
+            if "ph value" in text:
+                result["pH"] = last_numeric(row)
+
+            if text.strip() == "temp":
+                result["Temp"] = last_numeric(row)
+
+        # -------- Missing Wet handling --------
+        if "Rubbing Dry" in result and not rubbing_found["Wet"]:
+            result["Rubbing Wet"] = "-"
 
         return result
 
@@ -150,7 +169,7 @@ class MergeApp(QWidget):
             wb.save(save_path)
             QMessageBox.information(
                 self, "Success",
-                "QA Report extracted EXACTLY as per structure ✔"
+                "Rubbing + Home Laundering data extracted perfectly ✔"
             )
 
 
