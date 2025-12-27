@@ -25,6 +25,10 @@ def last_numeric(row):
     return ""
 
 
+def clean(val):
+    return str(val).strip()
+
+
 # ---------------- APP ----------------
 class MergeApp(QWidget):
     def __init__(self):
@@ -81,12 +85,33 @@ class MergeApp(QWidget):
         df = df.fillna("").astype(str)
         result = {}
         current_test = ""
-
         rubbing_found = {"Dry": False, "Wet": False}
 
         for i in range(len(df)):
             row = df.iloc[i]
-            text = " ".join(row).lower()
+            row_lower = [c.lower() for c in row]
+
+            # -------- HEADER FIELDS (same row, next column) --------
+            for idx, cell in enumerate(row_lower):
+                if cell == "date":
+                    result["Date"] = clean(row[idx + 1]) if idx + 1 < len(row) else ""
+
+                elif cell == "customer":
+                    result["Customer"] = clean(row[idx + 1]) if idx + 1 < len(row) else ""
+
+                elif "order#" in cell or cell == "order":
+                    result["Order#"] = clean(row[idx + 1]) if idx + 1 < len(row) else ""
+
+                elif "fabric code" in cell:
+                    result["Fabric Code"] = clean(row[idx + 1]) if idx + 1 < len(row) else ""
+
+                elif "sample status" in cell:
+                    result["Sample Status"] = clean(row[idx + 1]) if idx + 1 < len(row) else ""
+
+                elif cell == "article":
+                    result["Article"] = clean(row[idx + 1]) if idx + 1 < len(row) else ""
+
+            text = " ".join(row_lower)
 
             # -------- Test block detection --------
             if "tear strength" in text:
@@ -134,7 +159,6 @@ class MergeApp(QWidget):
             if text.strip() == "temp":
                 result["Temp"] = last_numeric(row)
 
-        # -------- Missing Wet handling --------
         if "Rubbing Dry" in result and not rubbing_found["Wet"]:
             result["Rubbing Wet"] = "-"
 
@@ -169,7 +193,7 @@ class MergeApp(QWidget):
             wb.save(save_path)
             QMessageBox.information(
                 self, "Success",
-                "Rubbing + Home Laundering data extracted perfectly ✔"
+                "Header + Test data extracted perfectly ✔"
             )
 
 
