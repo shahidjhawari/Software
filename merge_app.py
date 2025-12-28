@@ -29,6 +29,13 @@ def clean(val):
     return str(val).strip()
 
 
+def next_value(row, start_idx):
+    for j in range(start_idx + 1, len(row)):
+        if str(row[j]).strip():
+            return clean(row[j])
+    return ""
+
+
 # ---------------- APP ----------------
 class MergeApp(QWidget):
     def __init__(self):
@@ -91,28 +98,29 @@ class MergeApp(QWidget):
             row = df.iloc[i]
             row_lower = [c.lower().strip() for c in row]
 
-            # -------- HEADER FIELDS (LEFT & RIGHT) --------
+            # -------- HEADER (LEFT SIDE – FIXED) --------
             for idx, cell in enumerate(row_lower):
 
                 if cell == "date":
-                    result["Date"] = clean(row[idx + 1]) if idx + 1 < len(row) else ""
+                    result["Date"] = next_value(row, idx)
 
                 elif cell == "customer":
-                    result["Customer"] = clean(row[idx + 1]) if idx + 1 < len(row) else ""
+                    result["Customer"] = next_value(row, idx)
 
                 elif "order#" in cell or cell == "order":
-                    result["Order#"] = clean(row[idx + 1]) if idx + 1 < len(row) else ""
+                    result["Order#"] = next_value(row, idx)
 
                 elif "fabric code" in cell:
-                    result["Fabric Code"] = clean(row[idx + 1]) if idx + 1 < len(row) else ""
+                    result["Fabric Code"] = next_value(row, idx)
 
+                # -------- HEADER (RIGHT SIDE – ALREADY OK) --------
                 elif "sample status" in cell:
                     result["Sample Status"] = clean(row[idx + 1]) if idx + 1 < len(row) else ""
 
                 elif cell == "article":
                     result["Article"] = clean(row[idx + 1]) if idx + 1 < len(row) else ""
 
-                elif "wash ref" in cell or cell == "wash reference":
+                elif "wash ref" in cell:
                     result["Wash ref"] = clean(row[idx + 1]) if idx + 1 < len(row) else ""
 
                 elif cell == "reference":
@@ -187,11 +195,7 @@ class MergeApp(QWidget):
             df = pd.read_excel(rpt, header=None)
             extracted = self.extract_report(df)
 
-            new_row = []
-            for h in headers:
-                new_row.append(extracted.get(h, ""))
-
-            ws.append(new_row)
+            ws.append([extracted.get(h, "") for h in headers])
 
         save_path, _ = QFileDialog.getSaveFileName(
             self, "", "", "Excel Files (*.xlsx)"
