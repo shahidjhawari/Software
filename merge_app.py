@@ -162,7 +162,6 @@ class MergeApp(QWidget):
         df = df.fillna("").astype(str)
         result = {}
         current_test = ""
-        rubbing_found = {"Dry": False, "Wet": False}
 
         for i in range(len(df)):
             row = df.iloc[i]
@@ -198,7 +197,6 @@ class MergeApp(QWidget):
                 current_test = "Tensile"
             elif "color fastness to rubbing" in text:
                 current_test = "Rubbing"
-                rubbing_found = {"Dry": False, "Wet": False}
             elif "color fastness to home laundering" in text:
                 current_test = "Home Laundering"
 
@@ -230,7 +228,7 @@ class MergeApp(QWidget):
 
         return result
 
-    # ---------------- MERGE ----------------
+    # ---------------- MERGE (ACTIVE SHEET LOGIC) ----------------
     def merge_files(self):
         if not self.dataentry_file or not self.report_files:
             QMessageBox.warning(self, "Error", "Please select files first")
@@ -243,7 +241,15 @@ class MergeApp(QWidget):
         ws = wb.active
 
         for rpt in self.report_files:
-            df = pd.read_excel(rpt, header=None)
+            rpt_wb = load_workbook(rpt, data_only=True)
+            active_sheet_name = rpt_wb.active.title
+
+            df = pd.read_excel(
+                rpt,
+                sheet_name=active_sheet_name,
+                header=None
+            )
+
             extracted = self.extract_report(df)
             ws.append([extracted.get(h, "") for h in headers])
 
