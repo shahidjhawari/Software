@@ -18,13 +18,6 @@ def is_number(x):
         return False
 
 
-def last_numeric(row):
-    for v in reversed(row):
-        if is_number(v):
-            return v
-    return ""
-
-
 def clean(val):
     return str(val).strip()
 
@@ -99,7 +92,7 @@ class MergeApp(QWidget):
             row_lower = [c.lower().strip() for c in row]
             text = " ".join(row_lower)
 
-            # -------- HEADER (LEFT SIDE) --------
+            # -------- HEADER --------
             for idx, cell in enumerate(row_lower):
 
                 if cell == "date":
@@ -115,25 +108,26 @@ class MergeApp(QWidget):
                     result["Fabric Code"] = next_value(row, idx)
 
                 elif "sample status" in cell:
-                    result["Sample Status"] = clean(row[idx + 1]) if idx + 1 < len(row) else ""
+                    result["Sample Status"] = next_value(row, idx)
 
                 elif cell == "article":
-                    result["Article"] = clean(row[idx + 1]) if idx + 1 < len(row) else ""
+                    result["Article"] = next_value(row, idx)
 
                 elif "wash ref" in cell:
-                    result["Wash ref"] = clean(row[idx + 1]) if idx + 1 < len(row) else ""
+                    result["Wash ref"] = next_value(row, idx)
 
                 elif cell == "reference":
-                    result["Reference"] = clean(row[idx + 1]) if idx + 1 < len(row) else ""
+                    result["Reference"] = next_value(row, idx)
 
                 elif cell == "remarks":
                     result["Remarks"] = next_value(row, idx)
 
-            # -------- WEIGHT --------
-            if text.startswith("weight"):
-                result["Weight"] = last_numeric(row)
+            # -------- WEIGHT (Column 9 FIXED) --------
+            if "weight" in row_lower:
+                if len(row) > 9 and is_number(row[9]):
+                    result["Weight"] = row[9]
 
-            # -------- Test block detection --------
+            # -------- TEST BLOCK --------
             if "tear strength" in text:
                 current_test = "Tear"
 
@@ -149,37 +143,42 @@ class MergeApp(QWidget):
 
             # -------- Tear / Tensile --------
             if "warp" in text and current_test in ["Tear", "Tensile"]:
-                result[f"{current_test} Warp"] = last_numeric(row)
+                if is_number(row[9]):
+                    result[f"{current_test} Warp"] = row[9]
 
             if "weft" in text and current_test in ["Tear", "Tensile"]:
-                result[f"{current_test} Weft"] = last_numeric(row)
+                if is_number(row[9]):
+                    result[f"{current_test} Weft"] = row[9]
 
             # -------- Rubbing --------
             if current_test == "Rubbing":
-                if "dry" in text:
-                    result["Rubbing Dry"] = last_numeric(row)
+                if "dry" in text and is_number(row[9]):
+                    result["Rubbing Dry"] = row[9]
                     rubbing_found["Dry"] = True
 
-                if "wet" in text:
-                    result["Rubbing Wet"] = last_numeric(row)
+                if "wet" in text and is_number(row[9]):
+                    result["Rubbing Wet"] = row[9]
                     rubbing_found["Wet"] = True
 
             # -------- Home Laundering --------
             if current_test == "Home Laundering":
-                if "shade change" in text:
-                    result["Shade Change"] = last_numeric(row)
+                if "shade change" in text and is_number(row[9]):
+                    result["Shade Change"] = row[9]
 
-                if "staining" in text:
-                    result["Staining"] = last_numeric(row)
+                if "staining" in text and is_number(row[9]):
+                    result["Staining"] = row[9]
 
-            # -------- pH BLOCK --------
-            if "ph value" in text:
-                result["pH"] = last_numeric(row)
+            # -------- pH (Column 9 FIXED) --------
+            if "ph value" in row_lower:
+                if len(row) > 9 and is_number(row[9]):
+                    result["pH"] = row[9]
 
-            if text.endswith("temp") or " temp" in text:
-                result["Temp"] = last_numeric(row)
+            # -------- TEMP --------
+            if "temp" in row_lower:
+                if len(row) > 9 and is_number(row[9]):
+                    result["Temp"] = row[9]
 
-        if "Rubbing Dry" in result and not rubbing_found["Wet"]:
+        if "Rubbing Dry" in result and "Rubbing Wet" not in result:
             result["Rubbing Wet"] = "-"
 
         return result
@@ -199,7 +198,6 @@ class MergeApp(QWidget):
         for rpt in self.report_files:
             df = pd.read_excel(rpt, header=None)
             extracted = self.extract_report(df)
-
             ws.append([extracted.get(h, "") for h in headers])
 
         save_path, _ = QFileDialog.getSaveFileName(
@@ -209,7 +207,7 @@ class MergeApp(QWidget):
             wb.save(save_path)
             QMessageBox.information(
                 self, "Success",
-                "Header + Test data + Weight + pH + Remarks extracted ✔"
+                "Weight + pH + Temp values extracted correctly ✔"
             )
 
 
