@@ -254,7 +254,7 @@ class MergeApp(QWidget):
             wb.save(save_path)
             QMessageBox.information(
                 self, "Success",
-                "All values extracted correctly ✔"
+                "All data enter successfully"
             )
 
 
