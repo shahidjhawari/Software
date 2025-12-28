@@ -97,8 +97,9 @@ class MergeApp(QWidget):
         for i in range(len(df)):
             row = df.iloc[i]
             row_lower = [c.lower().strip() for c in row]
+            text = " ".join(row_lower)
 
-            # -------- HEADER (LEFT SIDE – FIXED) --------
+            # -------- HEADER (LEFT SIDE) --------
             for idx, cell in enumerate(row_lower):
 
                 if cell == "date":
@@ -113,7 +114,6 @@ class MergeApp(QWidget):
                 elif "fabric code" in cell:
                     result["Fabric Code"] = next_value(row, idx)
 
-                # -------- HEADER (RIGHT SIDE – ALREADY OK) --------
                 elif "sample status" in cell:
                     result["Sample Status"] = clean(row[idx + 1]) if idx + 1 < len(row) else ""
 
@@ -126,7 +126,12 @@ class MergeApp(QWidget):
                 elif cell == "reference":
                     result["Reference"] = clean(row[idx + 1]) if idx + 1 < len(row) else ""
 
-            text = " ".join(row_lower)
+                elif cell == "remarks":
+                    result["Remarks"] = next_value(row, idx)
+
+            # -------- WEIGHT --------
+            if text.startswith("weight"):
+                result["Weight"] = last_numeric(row)
 
             # -------- Test block detection --------
             if "tear strength" in text:
@@ -167,11 +172,11 @@ class MergeApp(QWidget):
                 if "staining" in text:
                     result["Staining"] = last_numeric(row)
 
-            # -------- Single value tests --------
+            # -------- pH BLOCK --------
             if "ph value" in text:
                 result["pH"] = last_numeric(row)
 
-            if text.strip() == "temp":
+            if text.endswith("temp") or " temp" in text:
                 result["Temp"] = last_numeric(row)
 
         if "Rubbing Dry" in result and not rubbing_found["Wet"]:
@@ -204,7 +209,7 @@ class MergeApp(QWidget):
             wb.save(save_path)
             QMessageBox.information(
                 self, "Success",
-                "Header + Test data extracted perfectly ✔"
+                "Header + Test data + Weight + pH + Remarks extracted ✔"
             )
 
 
