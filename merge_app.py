@@ -36,7 +36,7 @@ class MergeApp(QWidget):
     def __init__(self):
         super().__init__()
 
-        self.setWindowTitle("QA LAB — Accurate Auto Entry")
+        self.setWindowTitle("QA LAB Accurate Auto Entry")
         self.setGeometry(200, 200, 1100, 680)
         QApplication.setStyle(QStyleFactory.create("Fusion"))
 
@@ -91,7 +91,7 @@ class MergeApp(QWidget):
         main_layout = QVBoxLayout(self)
         main_layout.setSpacing(14)
 
-        title = QLabel("QA Laboratory Report Merger")
+        title = QLabel("QA LAB Accurate Auto Entry")
         title.setObjectName("title")
         title.setAlignment(Qt.AlignCenter)
 
@@ -118,7 +118,7 @@ class MergeApp(QWidget):
         self.lbl_data = QLabel("No Data Entry File Selected")
         self.lbl_data.setStyleSheet("color:#38bdf8; padding:6px;")
 
-        btn_merge = QPushButton("MERGE & SAVE")
+        btn_merge = QPushButton("SAVE")
         btn_merge.setObjectName("merge")
         btn_merge.clicked.connect(self.merge_files)
 
@@ -130,7 +130,7 @@ class MergeApp(QWidget):
         card_layout.addSpacing(6)
         card_layout.addWidget(btn_merge)
 
-        footer = QLabel("© 2025 QA LAB Software — Developed by Shahid Iqbal")
+        footer = QLabel("© 2025 - 2026 QA LAB Accurate Auto Entry — Developed by Shahid Iqbal")
         footer.setObjectName("footer")
         footer.setAlignment(Qt.AlignCenter)
 
@@ -254,7 +254,7 @@ class MergeApp(QWidget):
             wb.save(save_path)
             QMessageBox.information(
                 self, "Success",
-                "Weight + pH + Temp values extracted correctly ✔"
+                "All values extracted correctly ✔"
             )
 
 
