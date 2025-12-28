@@ -89,10 +89,11 @@ class MergeApp(QWidget):
 
         for i in range(len(df)):
             row = df.iloc[i]
-            row_lower = [c.lower() for c in row]
+            row_lower = [c.lower().strip() for c in row]
 
-            # -------- HEADER FIELDS (same row, next column) --------
+            # -------- HEADER FIELDS (LEFT & RIGHT) --------
             for idx, cell in enumerate(row_lower):
+
                 if cell == "date":
                     result["Date"] = clean(row[idx + 1]) if idx + 1 < len(row) else ""
 
@@ -111,6 +112,12 @@ class MergeApp(QWidget):
                 elif cell == "article":
                     result["Article"] = clean(row[idx + 1]) if idx + 1 < len(row) else ""
 
+                elif "wash ref" in cell or cell == "wash reference":
+                    result["Wash ref"] = clean(row[idx + 1]) if idx + 1 < len(row) else ""
+
+                elif cell == "reference":
+                    result["Reference"] = clean(row[idx + 1]) if idx + 1 < len(row) else ""
+
             text = " ".join(row_lower)
 
             # -------- Test block detection --------
@@ -127,7 +134,7 @@ class MergeApp(QWidget):
             elif "color fastness to home laundering" in text:
                 current_test = "Home Laundering"
 
-            # -------- Tear / Tensile (UNCHANGED) --------
+            # -------- Tear / Tensile --------
             if "warp" in text and current_test in ["Tear", "Tensile"]:
                 result[f"{current_test} Warp"] = last_numeric(row)
 
